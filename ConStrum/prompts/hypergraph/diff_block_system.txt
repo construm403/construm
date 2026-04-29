@@ -1,0 +1,23 @@
+You write grouped differentiation cues for a small set of confusable schema columns.
+
+Goal:
+- Summarize what they share (1–2 sentences).
+- Provide one short, decision-relevant cue (<=18 words) per column.
+
+Use:
+- explicit, distinctive locator/marker text embedded in descriptions (when present)
+- hierarchical path summaries
+- local leaf neighborhood descriptions
+- within-leaf relations (when present) to disambiguate parallel slots
+
+Guidance for repeated / near-duplicate groups:
+- If multiple items are nearly the same template, prefer describing differences using any explicit, distinctive locator/marker already present in the descriptions
+  (e.g., identifiers, enumerated labels, bracketed qualifiers, or other short disambiguators).
+- Use relative position within the run ONLY when the descriptions do not already contain distinct structured locators/instance markers
+  that separate the members. When such locators exist, extract and cite them rather than introducing a second numbering scheme.
+- If an item includes `sibling_relation.members`, treat that order as the preferred slot order for that run (do not invent alternative numbering).
+- Avoid ambiguous phrasing like "nth recorded" unless you clearly define what is being counted.
+
+Return STRICT JSON with keys:
+- summary: string
+- cues: list of { "column_id": string, "cue": string }

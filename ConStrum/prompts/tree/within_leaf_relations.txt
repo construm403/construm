@@ -1,0 +1,71 @@
+You are analyzing an ordered span of schema fields (columns) from a large table.
+
+Input:
+- A small, contiguous, ordered list of items.
+- Each item has: a stable `id`, an integer `pos` (order), and a `desc` text.
+
+Goal:
+1) Write a compact, fine-grained summary of what this span is about (1–3 sentences).
+2) Include decision-relevant context signals when present, such as:
+   - conditional applicability (flags/status/presence indicators that qualify other fields),
+   - the main entities involved (e.g., accounts, transactions, addresses, items, events),
+   - time frames / units (if stated),
+   - how the topic progresses across the ordered items.
+3) Identify any within-span relationships that would help downstream reasoning and matching. These relations should be compact,
+   structural, and based only on the provided ordered items. Examples (not exhaustive):
+   - qualifiers: one field qualifies the meaning or applicability of others (status, type, scope, source, mode, currency)
+   - identifier anchors: an ID/key that ties together multiple related attributes (foreign key, record id, entity id)
+   - identifier/value pairs: an identifier paired with a label/description, category, or lookup-like field
+   - linked quantities: value + unit, amount + currency, value + frequency, count + denominator, min/max ranges
+   - time linkage: start/end pairs, effective date ranges, event date + related attributes, period markers
+   - composition: totals vs components, summary vs detail lines, parent/child grouping fields
+   - multi-part attributes: one concept split into parts (name components, address components, coordinates, part A/B)
+   - alternatives/modes: mutually exclusive options, mode/type selectors that change interpretation of adjacent fields
+   - derivations: raw vs normalized/standardized values, computed vs source fields, repeated metrics across levels
+   - repeated / templated runs: a contiguous run of fields that share a structural template and appear multiple times
+     (including near-duplicates and exact repeats). Preserve “which occurrence is which” by listing members in order and using a short
+     per-member cue when visible (instance marker, key/time sub-variant, or other minimal distinguisher).
+     If the run contains one shared “stem/base” field plus multiple slot/occurrence fields (common in array-like schemas),
+     list ONLY the slot/occurrence fields in `members` and treat the stem/base as an anchor.
+   - explicit, distinctive locator/marker text embedded in descriptions (if present) can be used as anchors
+
+Important:
+- Infer structure only from the given ordered items.
+- The core output is the summary. Add within-leaf relations only when they clearly help disambiguation or interpretation.
+- Keep relations sparse and high-signal. Keep strings short. Avoid long prose in relations.
+- Near-duplicate handling: If you see a contiguous run of 2+ fields that are strongly confusable (same template with minor variations),
+  include a `within_leaf_relations` entry for that run and list the members in order. This helps preserve slot/occurrence identity for
+  downstream reasoning and matching.
+- If a repeated/templated run contains near-duplicate members that are hard to tell apart, you MAY add an ordinal prefix inside the note
+  to make the slot identity explicit (e.g., "3/5; <cue>"). Do not do this unless it helps disambiguation.
+  The cue should be a minimal differentiator (instance marker, key/time sub-variant, type/status cue), not a restatement.
+  If the descriptions already contain distinct structured locator tokens / instance markers that disambiguate the members, prefer citing
+  those in the cue and avoid adding a separate ordinal prefix.
+
+Output:
+- Return STRICT JSON with this schema:
+{
+  "summary": "<string>",
+  "within_leaf_relations": [
+    {
+      "repeat_key": "<short label for the repeated family you invent>",
+      "members": [
+        {"id": "<column_id>", "note": "<very short cue (<=12 words)>"},
+        {"id": "<column_id>", "note": "<very short cue (<=12 words)>"},
+        "... (in order)"
+      ],
+      "anchors": {
+        "prev_id": "<nearest qualifier/anchor id before the run, or ''>",
+        "next_id": "<first non-family id after the run, or ''>"
+      },
+      "note": "<very short overall cue (<=12 words)>"
+    }
+  ]
+}
+
+Important:
+- Do NOT add separate index fields. Preserve slot identity by keeping `members` in the correct order.
+- If you include an ordinal prefix in `members[].note`, use a compact prefix like "<i>/<n>; ...".
+
+If no helpful repeated templated pattern is detected, set "within_leaf_relations" to [].
+

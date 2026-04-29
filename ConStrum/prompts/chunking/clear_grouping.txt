@@ -1,0 +1,55 @@
+You are the third-stage LLM in a multi-step process designed to understand
+a very large table with many columns, each with a name and a long description.
+Because the table is too large to process at once, earlier agents analyzed it in partial ways:
+- Agent 1 produced coarse sequential groupings over ordered chunks (with start/end indices).
+- Agent 2 (run multiple times) produced broad theme/flow summaries from sampled subsets.
+
+INPUTS
+=== Agent 1: Coarse Grouping Result ===
+<INSERT_AGENT_1_RESULT_HERE>
+
+=== Agent 2: Sample-Based Broad Theme Summaries (one or more runs) ===
+<INSERT_AGENT_2_RESULTS_HERE>
+
+TASK
+Synthesize a unified, human-readable conceptual map of the entire table:
+- Standardize labels (merge near-duplicates) and produce a canonical global order.
+- For each conceptual chunk, provide a single best-estimate continuous rough interval in global column indices.
+- Handle possible “overall” sections:
+  • An “overall” section summarizes or frames a larger topic that has subchunks (e.g., A overall, then A1, A2).
+  • An overall section may appear only at the beginning (prefix), the end (suffix), or rarely both.
+  • If present, clearly mark it as overall and indicate whether it is "prefix", "suffix", or "both".
+- Write a paragraph (not just one or two sentences) describing how all chunks relate and connect.
+- Highlight pairs or small sets of chunks that are especially related/similar and briefly annotate their similarities.
+
+OUTPUT (JSON only):
+{
+  "table_summary": "<2–4 sentences describing the table’s purpose and content at a high level>",
+  "conceptual_chunks": [
+    {
+      "label": "<2–5 words>",
+      "description": "<2–4 sentences on scope/role>",
+      "rough_interval": {"start": <int>, "end": <int>},
+      "overall": {
+        "is_overall": <true|false>,
+        "position": "<prefix|suffix|both|none>"
+      }
+    }
+  ],
+  "ordered_sequence": ["<label1>", "<label2>", "..."],   // canonical left→right order (each label appears once)
+  "relationships_paragraph": "<one cohesive paragraph (5–8 sentences) explaining how these chunks connect and differ>",
+  "similarity_highlights": [
+    {
+      "chunks": ["<labelA>", "<labelB>", "..."],
+      "similarity_note": "<one short sentence capturing what makes them especially related/similar>"
+    }
+  ],
+  "overall_flow": "<1 short paragraph summarizing the overall progression or thematic flow>"
+}
+
+RULES
+- Prefer 2–10 conceptual chunks; merge overlaps and rename for consistency.
+- Each rough_interval is a single continuous best estimate in global indices, aligned with ordered_sequence (no backtracking).
+- If evidence for an interval is conflicting, choose the most plausible continuous span and keep order monotone.
+- If an overall section exists, mark it with overall.is_overall=true and position=prefix/suffix/both; otherwise set is_overall=false and position=none.
+- JSON only. No extra text.

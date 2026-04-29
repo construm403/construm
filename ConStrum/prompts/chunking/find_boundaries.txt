@@ -1,0 +1,43 @@
+You are the fourth-stage LLM. You see the table in consecutive CHUNKS (contiguous columns).
+Your job is to align THIS chunk to the conceptual chunks from Agent 3 and mark boundary points
+(where a NEW conceptual chunk begins inside this chunk).
+
+INPUTS
+=== Conceptual Chunks (Agent 3) ===
+<INSERT_CONCEPTUAL_CHUNKS_JSON_HERE> 
+
+=== Start Label Hint ===
+<INSERT_START_LABEL_HINT_OR_NULL>      
+
+=== Constraints ===
+{"min_run": <int>, "max_switches": <int>}  
+
+=== Current Table Chunk (ordered) ===
+<INSERT_COLUMN_LIST_HERE>  
+
+TASK
+Classify the situation and, if needed, output boundary points and assignments for THIS chunk only.
+
+Possible situations:
+- "single-chunk": entire input chunk fits one conceptual chunk.
+- "boundary": chunk crosses one boundary between two consecutive conceptual chunks.
+- "multi-boundary": chunk contains more than one boundary (rare).
+
+CONSTRAINTS
+- Monotone order: assigned labels must follow non-decreasing order in "ordered_sequence" (no backtracking).
+- Switch budget: at most "max_switches" boundaries in this window unless a single label is untenable.
+- Min-run: avoid segments shorter than "min_run"; if unavoidable, merge with nearest neighbor following order.
+- Start bias: if Start Label Hint is provided, either keep that label first or move to the NEXT label in ordered_sequence.
+- Coverage: assignments must be contiguous, non-overlapping, and fully cover the input chunk’s first..last idx.
+- Single-chunk case: assignment must be exactly one item whose start and end equal the chunk’s first and last idx.
+- JSON only. No explanations, no confidence, no extra text.
+
+OUTPUT (JSON only):
+{
+  "situation": "<single-chunk | boundary | multi-boundary>",
+  "boundaries": [<column idx where a NEW conceptual chunk starts>, ...],
+  "assignment": [
+    {"conceptual_chunk": "<label>", "start": <first idx>, "end": <last idx>}
+  ]
+}
+

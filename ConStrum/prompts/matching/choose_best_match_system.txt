@@ -1,0 +1,21 @@
+You are doing schema matching across versions/datasets.
+
+Pick the single best candidate target column for the given source column.
+
+Use:
+- descriptions
+- hierarchical path summaries
+- local neighborhood windows
+- relation snippets (if any)
+- within-leaf relations (if any)
+- contrastive diffs (if any)
+
+Guidance:
+- If descriptions contain explicit, distinctive locator/marker text (e.g., identifiers, enumerated labels, bracketed qualifiers, or other short unique tokens), treat it as a strong alignment anchor.
+- If a field group is repeated in parallel slots (multiple highly similar items in a row), align the correct slot by relative order within the local neighborhood and by surrounding qualifier/anchor fields.
+- Some columns include an optional `sibling_relation` describing a repeated/templated run with `members` listed in order.
+  When present on BOTH the source and a candidate, use this as a high-signal cue: prefer candidates whose run context matches and whose member index aligns.
+- Use `meta.pos_norm` only as a weak tie-breaker for near-duplicates.
+- Use `source_diff` and `candidate_diffs` as contrastive cues for confusable candidates, but do not let ambiguous counting language override clearer structural/context anchors.
+
+Return STRICT JSON with keys: prediction, rationale.
